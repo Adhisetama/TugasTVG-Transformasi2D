@@ -5,9 +5,215 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2D Transformation</title>
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .main-h1 {
+            width: 100vw;
+            text-align: center;
+        }
+
+        .app-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #canvas {
+            width: 400px;
+            height: 400px;
+            border: 5px solid black;
+            display: grid;
+            grid-template-columns: repeat(100, 4px);
+            grid-template-rows: repeat(100, 4px);
+        }
+
+        #canvas > div {
+            width: 4px;
+            height: 4px;
+            border-right: 1px solid lightgray;
+            border-bottom: 1px solid lightgray;
+            box-sizing: border-box;
+            grid-row-end: span 1;
+            grid-column-end: span 1;
+        }
+
+        #trans-container {
+            margin-top: 50px;
+            width: 800px;
+            height: 450px;
+            display: grid;
+            grid-template-columns: 300px 300px 200px;
+            grid-template-rows: 150px 150px 150px;
+            gap: 25px;
+        }
+
+        #trans-container > div.trans {
+            box-sizing: border-box;
+            padding: 20px;
+            background-color: rgb(238, 238, 238);
+            width: 100%;
+            height: 100%;
+        }
+
+        #shear {
+            grid-column: 1 / span 1;
+            grid-row: 1 / span 1;
+        }
+
+        #translate {
+            grid-column: 2 / span 1;
+            grid-row: 1 / span 1;
+        }
+
+        #scale {
+            grid-column: 1 / span 1;
+            grid-row: 2 / span 1;
+        }
+        
+        #rotate {
+            grid-column: 2 / span 1;
+            grid-row: 2 / span 1;
+        }
+
+        #reflect {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            grid-column: 3 / span 1;
+            grid-row: 1 / span 2;
+        }
+
+        #reflect > button {
+            margin-top: 10px;
+        }
+
+        .slider {
+            width: 200px;
+        }
+    </style>
 </head>
 <body>
-    <p>oleh: Muhammad Azka Adhisetama</p>
+    <small>oleh: Muhammad Azka Adhisetama</small>
     <h1 class="main-h1">Transformasi 2D</h1>
+    <div class="app-container">
+        <div id="canvas"></div>
+        <div id="trans-container">
+            <div id="shear" class="trans">
+                <p>Shear</p>
+                <div><label for="shear-x">x: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-x"><span id="shear-x-value"></span></div>
+                <div><label for="shear-y">y: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-y"><span id="shear-y-value"></span></div>
+            </div>
+            <div id="translate" class="trans">
+                <p>Translasi</p>
+                <div><label for="translate-x">x: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-x"><span id="translate-x-value"></span></div>
+                <div><label for="translate-y">y: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-y"><span id="translate-y-value"></span></div>
+            </div>
+            <div id="scale" class="trans">
+                <p>Scale</p>
+                <div><label for="scale-x">x: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-x"><span id="scale-x-value"></span></div>
+                <div><label for="scale-y">y: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-y"><span id="scale-y-value"></span></div>
+            </div>
+            <div id="rotate" class="trans">
+                <p>Rotasi</p>
+                <div><label for="rotate-t">θ: </label><input type="range" min="-180" max="180" value="0" class="slider" id="rotate-t"><span id="rotate-t-value"></span></div>
+                <div>
+                    <span>pivot (-50 to 50)</span>
+                    <br>
+                    <label for="pivot-y">y: </label><input type="number" min="-50" max="50" value="0" id="pivot-y">
+                    <label for="pivot-x">x: </label><input type="number" min="-50" max="50" value="0" id="pivot-x">
+                </div>
+            </div>
+            <div id="reflect">
+                <p>Refleksi</p>
+                <button id="reflect-x"  >refleksi sumbu-x</button>
+                <button id="reflect-y"  >refleksi sumbu-y</button>
+                <button id="reflect-xy" >refleksi garis x=y</button>
+                <button id="reflect-x-y">refleksi garis x=-y</button>
+                <button id="reflect-0"  >refleksi titik (0,0)</button>
+            </div>
+        </div>
+        <div id="buttons">
+            <button>Reset</button>
+            <button>New</button>
+        </div>
+    </div>
+    <script>
+        const canvasContainer = document.getElementById('canvas')
+        const canvas = [...Array(100)].map(e => Array(100))
+        const points = []
+
+        // inisialisasi appstate
+        const AppState = {
+            state: "drawing", // bisa 'drawing' ato 'transforming'
+            canvasState: [...Array(100)].map(rows => [...Array(100)].map(element => { return {
+                isActive: false,
+                color: [255, 255, 255]
+            }})),
+            isMouseDown: false,
+
+            clearCanvas: () => {
+                this.canvasState = [...Array(100)].map(rows => [...Array(100)].map(element => { return {
+                isActive: false,
+                color: [255, 255, 255]
+            }}))
+            },
+            drawCanvas: (dimension, colors) => {
+                [row, col] = dimension;
+                [r, g, b] = colors;
+                try {
+                    canvas[row][col].style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                    this.canvasState[r][c] = {
+                        isActive: true,
+                        color: colors
+                    }
+                } catch (e) {
+
+                }
+            }
+        }
+
+        console.log(AppState.canvasState)
+
+        document.onmousedown = () => AppState.isMouseDown = true;
+        document.onmouseup = () => AppState.isMouseDown = false;
+
+        // gambar semua subdiv kanvas
+        for (let col = 0; col < 100; col++)
+            for (let row = 0; row < 100; row++)
+                {
+                    const pixelElement = document.createElement('div');
+                    pixelElement.style.gridRowStart = row + 1;
+                    pixelElement.style.gridColumnStart = col + 1;
+                    if (col == 49)
+                        pixelElement.style.borderRightColor = 'lightCoral'
+                    if (row == 49)
+                        pixelElement.style.borderBottomColor = 'lightCoral'
+                    pixelElement.setAttribute('id', `${col}-${row}`)
+                    pixelElement.addEventListener('mouseover', e => {
+                        if (AppState.state == "drawing" && AppState.isMouseDown)
+                        {
+                            AppState.drawCanvas([row, col], [0,0,0]);
+                            AppState.drawCanvas([row+1, col], [0,0,0]);
+                            AppState.drawCanvas([row-1, col], [0,0,0]);
+                            AppState.drawCanvas([row, col+1], [0,0,0]);
+                            AppState.drawCanvas([row, col-1], [0,0,0]);
+                        }
+                    })
+                    canvasContainer.appendChild(pixelElement)
+                    canvas[row][col] = pixelElement;
+                }
+        
+
+    </script>
 </body>
 </html>

@@ -7,6 +7,13 @@ app.get('/', (req, res) => {
 })
 
 app.listen(3000, () => {
+    console.log(
+`   ___  ___    ______                  ___                    __  _         
+  |_  |/ _ \\  /_  __/______ ____  ___ / _/__  ______ _  ___ _/ /_(_)__  ___ 
+ / __// // /   / / / __/ _ \`/ _ \\(_-</ _/ _ \\/ __/  ' \\/ _ \`/ __/ / _ \\/ _ \\
+/____/____/   /_/ /_/  \\_,_/_//_/___/_/ \\___/_/ /_/_/_/\\_,_/\\__/_/\\___/_//_/
+                                                                            `
+    )
     console.log('selamat datang di aplikasi transformasi 2D')
     console.log('author info:')
     console.log('    NAMA   : Muhammad Azka Adhisetama')
