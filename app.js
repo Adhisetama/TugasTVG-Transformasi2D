@@ -6,7 +6,7 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', {root: __dirname})
 })
 
-app.listen(3000, () => {
+app.listen(8080, () => {
     console.log(
 `   ___  ___    ______                  ___                    __  _         
   |_  |/ _ \\  /_  __/______ ____  ___ / _/__  ______ _  ___ _/ /_(_)__  ___ 
@@ -19,6 +19,6 @@ app.listen(3000, () => {
     console.log('    NAMA   : Muhammad Azka Adhisetama')
     console.log('    NIM    : 21/477807/TK/52628\n')
     console.log('app ini dibuat menggunakan Node.js dan dicompile menjadi .exe')
-    console.log('silakan membuka link http://localhost:3000 dalam browser anda\n')
-    console.log('listening at port: 3000')
+    console.log('silakan membuka link http://localhost:8080 dalam browser anda\n')
+    console.log('listening at port: 8080')
 })

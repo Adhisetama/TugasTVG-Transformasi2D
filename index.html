@@ -159,7 +159,7 @@
             </div>
             <div id="rotate" class="trans t none">
                 <p>Rotasi</p>
-                <div><label for="rotate-t">θ: </label><input type="range" min="-180" max="180" value="0" class="slider" id="rotate-t"><span id="rotate-t-value">0</span>°</div>
+                <div><label for="rotate-t">θ: </label><input type="range" min="0" max="360" value="0" class="slider" id="rotate-t"><span id="rotate-t-value">0</span>°</div>
             </div>
             <div id="reflect" class="trans t none">
                 <p>Refleksi</p>
@@ -401,12 +401,12 @@
 
                 // Math.cos(t)*(c[1]-p[1]) + Math.sin(t)*(c[0]-p[0]) + p[1],
                 // Math.cos(t)*(c[0]-p[0]) - Math.sin(t)*(c[1]-p[1]) + p[0],
-                Math.cos(t)*c[0] - Math.sin(t)*c[1],
-                Math.sin(t)*c[0] + Math.cos(t)*c[1]
+                Math.cos(-t)*c[0] - Math.sin(-t)*c[1],
+                Math.sin(-t)*c[0] + Math.cos(-t)*c[1]
             ],
             reflect: {
-                x_axis: c => [c[0], -c[1]],
-                y_axis: c => [-c[0], c[1]],
+                x_axis: c => [-c[0], c[1]],
+                y_axis: c => [c[0], -c[1]],
                 xy_line: c => [c[1], c[0]],
                 x_y_line: c => [-c[1], -c[0]],
                 point_O: c => [-c[0], -c[1]]
@@ -450,8 +450,9 @@
                 tLabel: document.getElementById('rotate-t-value'),
                 getDiffT: function() {
                     const temp_prev = this.prevT;
-                    prevT = this.t.value;
-                    return this.t.value - temp_prev;
+                    this.prevT = Number(this.t.value);
+                    console.log(this.prevT - temp_prev, this.prevT, temp_prev)
+                    return this.prevT - temp_prev;
                 }
             },
             reflect: {
