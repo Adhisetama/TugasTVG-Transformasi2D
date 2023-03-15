@@ -138,22 +138,22 @@
         <div id="trans-container">
             <div id="shear" class="trans t none">
                 <p>Shear</p>
-                <div><label for="shear-x">x: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-x"><span id="shear-x-value"></span></div>
-                <div><label for="shear-y">y: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-y"><span id="shear-y-value"></span></div>
+                <div><label for="shear-x">x: </label><input type="range" min="-100" max="100" value="0" class="slider" id="shear-x"><span id="shear-x-value">0</span></div>
+                <div><label for="shear-y">y: </label><input type="range" min="-100" max="100" value="0" class="slider" id="shear-y"><span id="shear-y-value">0</span></div>
             </div>
             <div id="translate" class="trans t none">
                 <p>Translasi</p>
-                <div><label for="translate-x">x: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-x"><span id="translate-x-value"></span></div>
-                <div><label for="translate-y">y: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-y"><span id="translate-y-value"></span></div>
+                <div><label for="translate-x">x: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-x"><span id="translate-x-value">0</span></div>
+                <div><label for="translate-y">y: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-y"><span id="translate-y-value">0</span></div>
             </div>
             <div id="scale" class="trans t none">
                 <p>Scale</p>
-                <div><label for="scale-x">x: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-x"><span id="scale-x-value"></span></div>
-                <div><label for="scale-y">y: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-y"><span id="scale-y-value"></span></div>
+                <div><label for="scale-x">x: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-x"><span id="scale-x-value">0</span></div>
+                <div><label for="scale-y">y: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-y"><span id="scale-y-value">0</span></div>
             </div>
             <div id="rotate" class="trans t none">
                 <p>Rotasi</p>
-                <div><label for="rotate-t">θ: </label><input type="range" min="-180" max="180" value="0" class="slider" id="rotate-t"><span id="rotate-t-value"></span></div>
+                <div><label for="rotate-t">θ: </label><input type="range" min="-180" max="180" value="0" class="slider" id="rotate-t"><span id="rotate-t-value">0</span>°</div>
                 <div>
                     <span>pivot (-50 to 50)</span>
                     <br>
@@ -191,6 +191,13 @@
         </div>
     </div>
     <script>
+        function toPointCoordinate (c) {
+            return [c[0]-50, 50-c[1]]
+        }
+        function toIndexCoordinate (c) {
+            return [c[0]+50, 50-c[1]]
+        }
+
         const canvasContainer = document.getElementById('canvas')
         const canvas = [...Array(100)].map(e => Array(100))
         let points = []
@@ -254,7 +261,7 @@
                     if (point.isActive) {
                         points.push({
                             color: point.color,
-                            coordinate: [rowIndex, colIndex]
+                            coordinate: toPointCoordinate([rowIndex, colIndex])
                         })
                     }
                 }))
@@ -263,14 +270,12 @@
             drawPointsToCanvas: function() {
                 this.clearCanvas();
                 points.forEach(p => {
-                    if (p.coordinate[0] < 100 && p.coordinate[1] < 100) {
-                        AppState.drawCanvas(p.coordinate, p.color)
+                    let c = toIndexCoordinate(p.coordinate);
+                    c = [Math.round(c[0]), Math.round(c[1])];
+                    if (c[0] < 100 && c[1] < 100) {
+                        AppState.drawCanvas(c, p.color)
                     }
                 })
-            },
-            resetToInitialPoint: function() {
-                points = this.initialPoints;
-                canvas.forEach()
             }
         }
 
@@ -324,12 +329,14 @@
         })
         // ketika tombol reset ditekan, kembali ke initialpoint
         buttons.reset.addEventListener('click', (e) => {
-            AppState.resetToInitialPoint();
+            points = AppState.initialPoints;
             AppState.drawPointsToCanvas();
+            InputTransform.reset();
         })
         // ketika clear, maka ya clear
         buttons.clear.addEventListener('click', (e) => {
             AppState.clearCanvas();
+            points = [];
         })
 
         // mengenai color picker....
@@ -369,6 +376,106 @@
         colorPicker.input.g.addEventListener('change', () => {colorPicker.input.updateLabel(); colorPicker.updateDisplay()})
         colorPicker.input.b.addEventListener('change', () => {colorPicker.input.updateLabel(); colorPicker.updateDisplay()})
 
+        // mengenai transformasi....
+        const Transform = {
+            shear: {
+                x: (c, sx) => [c[0], c[1] + sx*c[0]],
+                y: (c, sy) => [c[0] + sy*c[1], c[1]]
+            },
+            scale: {
+                x: (c, sx) => [c[0] * sx, c[1]],
+                y: (c, sy) => [c[0], c[1] * sy]
+            },
+            translate: {
+                x: (c, tx) => [c[0] + tx, c[1]],
+                y: (c, ty) => [c[0], c[1] + ty]
+            },
+            rotate: (c, t, p) => [
+                Math.cos(t)*(c[0]-p[0]) + Math.sin(t)*(c[1]-p[1]) + p[0],
+                Math.cos(t)*(c[1]-p[1]) - Math.sin(t)*(c[1]-p[1]) + p[1]
+            ],
+            reflect: {
+                x_axis: c => [-c[0], c[1]],
+                y_axis: c => [c[0], -c[1]],
+                xy_line: c => [c[1], c[0]],
+                x_y_line: c => [-c[1], -c[0]],
+                point_O: c => [-c[0], -c[1]]
+            }
+        }
+
+        // semua input/tombol transformasi
+        const InputTransform = {
+            shear: { // bisa dari -100 sampai 100
+                prev: [0,0],
+                x: document.getElementById('shear-x'),
+                y: document.getElementById('shear-y'),
+                xLabel: document.getElementById('shear-x-value'),
+                yLabel: document.getElementById('shear-y-value'),
+                getDiff: function(axis) {
+                    let temp = this[axis].value - this.prev[0];
+                    this.prev[0] = this[axis].value;
+                    return temp / 25;
+                }
+            },
+            translate: {
+                x: document.getElementById('translate-x'),
+                y: document.getElementById('translate-y'),
+                xLabel: document.getElementById('translate-x-value'),
+                yLabel: document.getElementById('translate-y-value'),
+            },
+            scale: {
+                x: document.getElementById('scale-x'),
+                y: document.getElementById('scale-y'),
+                xLabel: document.getElementById('scale-x-value'),
+                yLabel: document.getElementById('scale-y-value'),
+            },
+            rotate: {
+                t: document.getElementById('rotate-t'),
+                tLabel: document.getElementById('rotate-t-value'),
+                px: document.getElementById('pivot-x'),
+                py: document.getElementById('pivot-y')
+            },
+            reflect: {
+                x_axis: document.getElementById('reflect-x'),
+                y_axis: document.getElementById('reflect-y'),
+                xy_line: document.getElementById('reflect-xy'),
+                x_y_line: document.getElementById('reflect-x-y'),
+                point_O: document.getElementById('reflect-0'),
+            },
+            reset: function() {
+                this.shear.x.value = 0;
+                this.shear.y.value = 0;
+                this.shear.xLabel.innerHTML = 0;
+                this.shear.yLabel.innerHTML = 0;
+            }
+        }
+        // 1. shear
+        InputTransform.shear.x.addEventListener('change', e => {
+            const Sx = InputTransform.shear.getDiff('x');
+            points = points.map(p => {
+                newCoordinate = Transform.shear.x(p.coordinate, Sx);
+                return {
+                    color: p.color,
+                    coordinate: newCoordinate
+                }
+            });
+            InputTransform.shear.xLabel.innerHTML = InputTransform.shear.x.value / 25;
+            AppState.drawPointsToCanvas();
+        })
+        InputTransform.shear.y.addEventListener('change', e => {
+            const Sy = InputTransform.shear.getDiff('y');
+            points = points.map(p => {
+                newCoordinate = Transform.shear.y(p.coordinate, Sy);
+                return {
+                    color: p.color,
+                    coordinate: newCoordinate
+                }
+            });
+            InputTransform.shear.yLabel.innerHTML = InputTransform.shear.y.value / 25;
+            AppState.drawPointsToCanvas();
+        })
+        // 2. 
+
     </script>
 </body>
-</html>z
+</html>
