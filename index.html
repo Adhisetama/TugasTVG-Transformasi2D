@@ -205,7 +205,7 @@
             isMouseDown: false,
 
             toggleState: function() {
-                if (this.state = "drawing") {
+                if (this.state == "drawing") {
                     this.state = "transforming"
                     dList = document.getElementsByClassName('d');
                     for (let e of dList) {
@@ -216,7 +216,7 @@
                         e.classList.remove('none');
                     }
                     // hide color picker, show transformation, change buttons, lock canvas
-                } else if (this.state = "transforming") {
+                } else if (this.state == "transforming") {
                     this.state = "drawing"
                     // show color picker, hide transformation, change buttons, enable canvas
                     dList = document.getElementsByClassName('d');
@@ -234,6 +234,7 @@
                 isActive: false,
                 color: [255, 255, 255]
             }}))
+                canvas.forEach(row => row.forEach(e => e.style.backgroundColor = 'white'))
             },
             drawCanvas: (dimension, colors) => {
                 [row, col] = dimension;
@@ -298,6 +299,7 @@
         })
         buttons.new.addEventListener('click', (e) => {
             AppState.toggleState();
+            AppState.clearCanvas();
         })
 
     </script>
