@@ -193,7 +193,7 @@
     <script>
         const canvasContainer = document.getElementById('canvas')
         const canvas = [...Array(100)].map(e => Array(100))
-        const points = []
+        let points = []
 
         // inisialisasi appstate
         const AppState = {
@@ -203,6 +203,8 @@
                 color: [255, 255, 255]
             }})),
             isMouseDown: false,
+            penColor: [0,0,0],
+            initialPoints: null,
 
             toggleState: function() {
                 if (this.state == "drawing") {
@@ -236,22 +238,41 @@
             }}))
                 canvas.forEach(row => row.forEach(e => e.style.backgroundColor = 'white'))
             },
-            drawCanvas: (dimension, colors) => {
+            drawCanvas: function (dimension, colors) {
                 [row, col] = dimension;
                 [r, g, b] = colors;
                 try {
                     canvas[row][col].style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-                    this.canvasState[r][c] = {
-                        isActive: true,
-                        color: colors
-                    }
+                    this.canvasState[row][col].isActive = true;
+                    this.canvasState[row][col].color = colors;
                 } catch (e) {
 
                 }
+            },
+            savePointsFromCanvas: function() {
+                this.canvasState.forEach((row, rowIndex) => row.forEach((point, colIndex) => {
+                    if (point.isActive) {
+                        points.push({
+                            color: point.color,
+                            coordinate: [rowIndex, colIndex]
+                        })
+                    }
+                }))
+                this.initialPoints = points
+            },
+            drawPointsToCanvas: function() {
+                this.clearCanvas();
+                points.forEach(p => {
+                    if (p.coordinate[0] < 100 && p.coordinate[1] < 100) {
+                        AppState.drawCanvas(p.coordinate, p.color)
+                    }
+                })
+            },
+            resetToInitialPoint: function() {
+                points = this.initialPoints;
+                canvas.forEach()
             }
         }
-
-        console.log(AppState.canvasState)
 
         document.onmousedown = () => AppState.isMouseDown = true;
         document.onmouseup = () => AppState.isMouseDown = false;
@@ -271,12 +292,11 @@
                     pixelElement.addEventListener('mouseover', e => {
                         if (AppState.state == "drawing" && AppState.isMouseDown)
                         {
-                            console.log(AppState.state)
-                            AppState.drawCanvas([row, col], [0,0,0]);
-                            AppState.drawCanvas([row+1, col], [0,0,0]);
-                            AppState.drawCanvas([row-1, col], [0,0,0]);
-                            AppState.drawCanvas([row, col+1], [0,0,0]);
-                            AppState.drawCanvas([row, col-1], [0,0,0]);
+                            AppState.drawCanvas([row, col], AppState.penColor);
+                            AppState.drawCanvas([row+1, col], AppState.penColor);
+                            AppState.drawCanvas([row-1, col], AppState.penColor);
+                            AppState.drawCanvas([row, col+1], AppState.penColor);
+                            AppState.drawCanvas([row, col-1], AppState.penColor);
                         }
                     })
                     canvasContainer.appendChild(pixelElement)
@@ -296,12 +316,59 @@
         // ketika tombol save/new ditekan (state berubah)
         buttons.save.addEventListener('click', (e) => {
             AppState.toggleState();
+            AppState.savePointsFromCanvas();
         })
         buttons.new.addEventListener('click', (e) => {
             AppState.toggleState();
             AppState.clearCanvas();
         })
+        // ketika tombol reset ditekan, kembali ke initialpoint
+        buttons.reset.addEventListener('click', (e) => {
+            AppState.resetToInitialPoint();
+            AppState.drawPointsToCanvas();
+        })
+        // ketika clear, maka ya clear
+        buttons.clear.addEventListener('click', (e) => {
+            AppState.clearCanvas();
+        })
+
+        // mengenai color picker....
+        const colorPicker = {
+            display: document.getElementById('display-color'),
+            input: {
+                r: document.getElementById('rgb-r'),
+                g: document.getElementById('rgb-g'),
+                b: document.getElementById('rgb-b'),
+
+                rLabel: document.getElementById('rgb-r-value'),
+                gLabel: document.getElementById('rgb-g-value'),
+                bLabel: document.getElementById('rgb-b-value'),
+
+                getValue: function() {
+                    return [
+                        this.r.value,
+                        this.g.value,
+                        this.b.value
+                    ]
+                },
+
+                updateLabel: function() {
+                    [r, g, b] = this.getValue();
+                    this.rLabel.innerHTML = r;
+                    this.gLabel.innerHTML = g;
+                    this.bLabel.innerHTML = b;
+                }
+            },
+            updateDisplay: function() {
+                [r, g, b] = this.input.getValue();
+                this.display.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                AppState.penColor = [r, g, b];
+            }
+        }
+        colorPicker.input.r.addEventListener('change', () => {colorPicker.input.updateLabel(); colorPicker.updateDisplay()})
+        colorPicker.input.g.addEventListener('change', () => {colorPicker.input.updateLabel(); colorPicker.updateDisplay()})
+        colorPicker.input.b.addEventListener('change', () => {colorPicker.input.updateLabel(); colorPicker.updateDisplay()})
 
     </script>
 </body>
-</html>
+</html>z
