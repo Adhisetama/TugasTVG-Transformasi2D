@@ -85,10 +85,6 @@
         }
 
         #reflect {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             grid-column: 3 / span 1;
             grid-row: 1 / span 2;
         }
@@ -100,30 +96,62 @@
         .slider {
             width: 200px;
         }
+
+        .buttons {
+            grid-column: 1 / span 3;
+            grid-row: 3 / span 1;
+        }
+
+        #display-color {
+            grid-column: 1 / span 1;
+            grid-row: 1 / span 2;
+            width: 150px;
+            height: 150px;
+            background-color: black;
+            align-self: center;
+            justify-self: self-end;
+            border: 5px solid black;
+        }
+
+        #input-color {
+            align-self: center;
+            grid-column: 2 / span 2;
+            grid-row: 1 / span 2;
+        }
+
+        .none {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <script>
+        // function updateSlider(labelId, value) {
+        //     const label = document.getElementById(labelId)
+        //     label.innerHTML = value
+        // }
+    </script>
     <small>oleh: Muhammad Azka Adhisetama</small>
     <h1 class="main-h1">Transformasi 2D</h1>
     <div class="app-container">
         <div id="canvas"></div>
         <div id="trans-container">
-            <div id="shear" class="trans">
+            <div id="shear" class="trans t none">
                 <p>Shear</p>
                 <div><label for="shear-x">x: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-x"><span id="shear-x-value"></span></div>
                 <div><label for="shear-y">y: </label><input type="range" min="-2" max="2" value="0" class="slider" id="shear-y"><span id="shear-y-value"></span></div>
             </div>
-            <div id="translate" class="trans">
+            <div id="translate" class="trans t none">
                 <p>Translasi</p>
                 <div><label for="translate-x">x: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-x"><span id="translate-x-value"></span></div>
                 <div><label for="translate-y">y: </label><input type="range" min="-90" max="90" value="0" class="slider" id="translate-y"><span id="translate-y-value"></span></div>
             </div>
-            <div id="scale" class="trans">
+            <div id="scale" class="trans t none">
                 <p>Scale</p>
                 <div><label for="scale-x">x: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-x"><span id="scale-x-value"></span></div>
                 <div><label for="scale-y">y: </label><input type="range" min="-3" max="3" value="0" class="slider" id="scale-y"><span id="scale-y-value"></span></div>
             </div>
-            <div id="rotate" class="trans">
+            <div id="rotate" class="trans t none">
                 <p>Rotasi</p>
                 <div><label for="rotate-t">θ: </label><input type="range" min="-180" max="180" value="0" class="slider" id="rotate-t"><span id="rotate-t-value"></span></div>
                 <div>
@@ -133,7 +161,7 @@
                     <label for="pivot-x">x: </label><input type="number" min="-50" max="50" value="0" id="pivot-x">
                 </div>
             </div>
-            <div id="reflect">
+            <div id="reflect" class="trans t none">
                 <p>Refleksi</p>
                 <button id="reflect-x"  >refleksi sumbu-x</button>
                 <button id="reflect-y"  >refleksi sumbu-y</button>
@@ -141,10 +169,25 @@
                 <button id="reflect-x-y">refleksi garis x=-y</button>
                 <button id="reflect-0"  >refleksi titik (0,0)</button>
             </div>
-        </div>
-        <div id="buttons">
-            <button>Reset</button>
-            <button>New</button>
+            <div class="buttons t none">
+                <button id="btn-reset">Reset</button>
+                <button id="btn-new">New</button>
+            </div>
+            <div class="buttons d">
+                <button id="btn-clear">Clear</button>
+                <button id="btn-save">Save</button>
+                <span> or import image url: </span>
+                <input type="text">
+                <button>Load</button>
+            </div>
+            <!-- color picker -->
+            <div id="display-color" class="d"></div>
+            <div id="input-color" class="d">
+                <b>color picker</b><br>
+                <label for="rgb-r">r: </label><input type="range" min="0" max="255" value="0" class="slider" id="rgb-r"><span id="rgb-r-value"></span><br>
+                <label for="rgb-g">g: </label><input type="range" min="0" max="255" value="0" class="slider" id="rgb-g"><span id="rgb-g-value"></span><br>
+                <label for="rgb-b">b: </label><input type="range" min="0" max="255" value="0" class="slider" id="rgb-b"><span id="rgb-b-value"></span>
+            </div>
         </div>
     </div>
     <script>
@@ -161,7 +204,32 @@
             }})),
             isMouseDown: false,
 
-            clearCanvas: () => {
+            toggleState: function() {
+                if (this.state = "drawing") {
+                    this.state = "transforming"
+                    dList = document.getElementsByClassName('d');
+                    for (let e of dList) {
+                        e.classList.add('none');
+                    }
+                    tList = document.getElementsByClassName('t');
+                    for (let e of tList) {
+                        e.classList.remove('none');
+                    }
+                    // hide color picker, show transformation, change buttons, lock canvas
+                } else if (this.state = "transforming") {
+                    this.state = "drawing"
+                    // show color picker, hide transformation, change buttons, enable canvas
+                    dList = document.getElementsByClassName('d');
+                    for (let e of dList) {
+                        e.classList.remove('none');
+                    }
+                    tList = document.getElementsByClassName('t');
+                    for (let e of tList) {
+                        e.classList.add('none');
+                    }
+                }
+            },
+            clearCanvas: function() {
                 this.canvasState = [...Array(100)].map(rows => [...Array(100)].map(element => { return {
                 isActive: false,
                 color: [255, 255, 255]
@@ -187,7 +255,7 @@
         document.onmousedown = () => AppState.isMouseDown = true;
         document.onmouseup = () => AppState.isMouseDown = false;
 
-        // gambar semua subdiv kanvas
+        // gambar semua subdiv kanvas (inisialisasi)
         for (let col = 0; col < 100; col++)
             for (let row = 0; row < 100; row++)
                 {
@@ -202,6 +270,7 @@
                     pixelElement.addEventListener('mouseover', e => {
                         if (AppState.state == "drawing" && AppState.isMouseDown)
                         {
+                            console.log(AppState.state)
                             AppState.drawCanvas([row, col], [0,0,0]);
                             AppState.drawCanvas([row+1, col], [0,0,0]);
                             AppState.drawCanvas([row-1, col], [0,0,0]);
@@ -213,6 +282,23 @@
                     canvas[row][col] = pixelElement;
                 }
         
+        buttons = {
+            // d
+            save: document.getElementById('btn-save'),
+            clear: document.getElementById('btn-clear'),
+            load: document.getElementById('btn-load'),
+            // t
+            reset: document.getElementById('btn-reset'),
+            new: document.getElementById('btn-new'),
+        }
+
+        // ketika tombol save/new ditekan (state berubah)
+        buttons.save.addEventListener('click', (e) => {
+            AppState.toggleState();
+        })
+        buttons.new.addEventListener('click', (e) => {
+            AppState.toggleState();
+        })
 
     </script>
 </body>
